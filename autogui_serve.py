@@ -64,7 +64,7 @@ async def locateOnScreen(
 
 @app.post("/auto/clickImage")
 async def clickImage(
-    image_path: UploadFile = File(...),
+    image_file: UploadFile = File(...),
     confidence: float = 0.8,
     grayscale=False,  # 是否转为灰度图加速匹配
     region=None,  # 搜索区域 (left, top, width, height)
