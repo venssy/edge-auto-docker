@@ -92,7 +92,7 @@ jobs:
           mv Dockerfile Dockerfile.end
 
           sed -i "s/FROM .*/& AS base/" "${{ env.TARGET_DIR }}/docker/base/Dockerfile"
-          sed -i "s/FROM ghcr.io/browserless/base:.*/FROM base AS edge/" "${{ env.TARGET_DIR }}/docker/edge/Dockerfile"
+          sed -i "s#FROM ghcr.io/browserless/base:.*#FROM base AS edge#" "${{ env.TARGET_DIR }}/docker/edge/Dockerfile"
 
           cat "${{ env.TARGET_DIR }}/docker/base/Dockerfile" > Dockerfile
           cat "${{ env.TARGET_DIR }}/docker/edge/Dockerfile" >> Dockerfile
