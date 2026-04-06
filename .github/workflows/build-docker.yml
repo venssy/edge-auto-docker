@@ -89,15 +89,14 @@ jobs:
           # 1. 拉取目标仓库代码到子目录
           git clone --depth 1 https://github.com/${{ env.TARGET_REPO }} ${{ env.TARGET_DIR }}
 
-          mv Dockerfile Dockerfile.end
+          cd "${{ env.TARGET_DIR }}"
 
-          sed -i "s/FROM .*/& AS base/" "${{ env.TARGET_DIR }}/docker/base/Dockerfile"
-          sed -i "s#FROM ghcr.io/browserless/base:.*#FROM base AS edge#" "${{ env.TARGET_DIR }}/docker/edge/Dockerfile"
+          sed -i "s/FROM .*/& AS base/" "docker/base/Dockerfile"
+          sed -i "s#FROM ghcr.io/browserless/base:.*#FROM base AS edge#" "docker/edge/Dockerfile"
 
           cat "${{ env.TARGET_DIR }}/docker/base/Dockerfile" > Dockerfile
           cat "${{ env.TARGET_DIR }}/docker/edge/Dockerfile" >> Dockerfile
-          cat "Dockerfile.end" >> Dockerfile
-
+          cat "../Dockerfile" >> Dockerfile
 
           docker buildx build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
