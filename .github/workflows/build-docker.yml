@@ -94,8 +94,8 @@ jobs:
           sed -i "s/FROM .*/& AS base/" "docker/base/Dockerfile"
           sed -i "s#FROM ghcr.io/browserless/base:.*#FROM base AS edge#" "docker/edge/Dockerfile"
 
-          cat "${{ env.TARGET_DIR }}/docker/base/Dockerfile" > Dockerfile
-          cat "${{ env.TARGET_DIR }}/docker/edge/Dockerfile" >> Dockerfile
+          cat "docker/base/Dockerfile" > Dockerfile
+          cat "docker/edge/Dockerfile" >> Dockerfile
           cat "../Dockerfile" >> Dockerfile
 
           docker buildx build \
