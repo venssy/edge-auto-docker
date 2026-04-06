@@ -91,6 +91,7 @@ jobs:
 
           cd ${{ env.TARGET_DIR }}
 
+          echo "[build] base image: ghcr.io/browserless/base:latest"
           docker buildx build \
             -f docker/base/Dockerfile \
             --cache-from=type=local,src=/tmp/.buildx-cache \
@@ -98,18 +99,16 @@ jobs:
             --tag ghcr.io/browserless/base:latest \
             --load .
 
-          # docker tag browserless/base:latest ghcr.io/browserless/base:latest
-
+          echo "[build] edge image: ghcr.io/browserless/edge:latest"
           docker buildx build \
             -f docker/edge/Dockerfile \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache \
-            --tag ghcr.io/browserless/base:latest \
+            --tag ghcr.io/browserless/edge:latest \
             --load .
 
-          # docker tag browserless/edge:latest ghcr.io/browserless/edge:latest
-
           cd ..
+          echo "[build] end image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
           docker buildx build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache \
