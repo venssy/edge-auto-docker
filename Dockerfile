@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     && apt install -y --only-upgrade python3-typing-extensions xdotool \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install fastapi uvicorn pyautogui pydantic --ignore-installed --break-system-packages -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip install fastapi uvicorn pyautogui pydantic python-multipart --ignore-installed --break-system-packages -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 USER blessuser
 
