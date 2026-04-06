@@ -63,7 +63,7 @@ jobs:
             echo "should_build=true" >> $GITHUB_OUTPUT
           fi
 
-          echo "Should build: ${{ steps.get_latest_release.outputs.should_build }}"
+          echo "Should build: ${{ steps.release_task.outputs.should_build }}"
 
       # 3. 登录阿里云 ACR（需提前在 GitHub Secrets 中配置 ACR_USERNAME 和 ACR_PASSWORD）
       - name: Login to ACR
