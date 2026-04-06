@@ -30,20 +30,25 @@ jobs:
       - name: Get Latest Release Tag
         id: get_latest_release
         run: |
-          RELEASE_DATA=$(curl -s https://api.github.com/repos/${{ env.TARGET_REPO }}/releases/latest)
+          LATEST_TAG_INFO=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ env.TARGET_REPO }}/tags" | \
+              jq -r 'sort_by(.commit.commit.author.date) | reverse | .[0]')
 
-          RAW_TAG=$(echo "$RELEASE_DATA" | jq -r .tag_name)
+          # 提取 Tag 名称
+          TAG_NAME=$(echo "$LATEST_TAG_INFO" | jq -r '.name')
           
           # 检查是否成功获取 Release 名称
-          if [[ -z "$RAW_TAG" ]]; then
+          if [[ -z "$TAG_NAME" ]]; then
             echo "Error: Failed to get latest release from ${{ env.TARGET_REPO }}"
             exit 1
           fi
           
-          VERSION=$(echo "$RAW_TAG" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//')
+          VERSION=$(echo "$TAG_NAME" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//')
 
           if [[ -z "$VERSION" ]]; then
-            echo "Error: Failed to extract version from tag '$RAW_TAG'"
+            echo "Error: Failed to extract version from tag '$TAG_NAME'"
             exit 1
           else
             echo "Latest release version: $VERSION"
@@ -52,7 +57,9 @@ jobs:
           echo "TAG=$VERSION" >> $GITHUB_OUTPUT
 
           # 4. 定时任务增量判断逻辑
-          PUB_DATE=$(echo "$RELEASE_DATA" | jq -r .published_at)
+
+          # 提取 Commit 时间（UTC）
+          PUB_DATE=$(echo "$LATEST_TAG_INFO" | jq -r '.commit.commit.author.date')
           PUB_TS=$(date -d "$PUB_DATE" +%s)
           NOW_TS=$(date +%s)
           DIFF=$(( (NOW_TS - PUB_TS) / 3600 ))
