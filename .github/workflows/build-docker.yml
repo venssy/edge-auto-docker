@@ -106,7 +106,7 @@ jobs:
             -f docker/edge/Dockerfile \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache \
-            --tag ghcr.io/browserless/edge:latest \
+            --tag browserless/edge:latest \
             --load .
 
           docker tag browserless/edge:latest ghcr.io/browserless/edge:latest
