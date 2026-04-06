@@ -1,4 +1,4 @@
-FROM ghcr.io/browserless/edge:latest
+FROM edge
 
 USER root
 

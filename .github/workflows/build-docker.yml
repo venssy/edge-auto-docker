@@ -89,30 +89,16 @@ jobs:
           # 1. 拉取目标仓库代码到子目录
           git clone --depth 1 https://github.com/${{ env.TARGET_REPO }} ${{ env.TARGET_DIR }}
 
-          cd ${{ env.TARGET_DIR }}
+          mv Dockerfile Dockerfile.end
 
-          echo "[build] base image: ghcr.io/browserless/base:latest"
-          docker buildx build \
-            -f docker/base/Dockerfile \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache \
-            --tag browserless/base:latest \
-            --load .
+          sed -i "s/FROM .*/& AS base/" "${{ env.TARGET_DIR }}/docker/base/Dockerfile"
+          sed -i "s/FROM ghcr.io/browserless/base:.*/FROM base AS edge/" "${{ env.TARGET_DIR }}/docker/edge/Dockerfile"
 
-          docker tag browserless/base:latest ghcr.io/browserless/base:latest
+          cat "${{ env.TARGET_DIR }}/docker/base/Dockerfile" > Dockerfile
+          cat "${{ env.TARGET_DIR }}/docker/edge/Dockerfile" >> Dockerfile
+          cat "Dockerfile.end" >> Dockerfile
 
-          echo "[build] edge image: ghcr.io/browserless/edge:latest"
-          docker buildx build \
-            -f docker/edge/Dockerfile \
-            --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache \
-            --tag browserless/edge:latest \
-            --load .
 
-          docker tag browserless/edge:latest ghcr.io/browserless/edge:latest
-
-          cd ..
-          echo "[build] end image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
           docker buildx build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache \
