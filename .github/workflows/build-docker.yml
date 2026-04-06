@@ -35,7 +35,7 @@ jobs:
 
       # 2. 获取目标仓库的最新 Release 名称（如 "v1.2.3"）
       - name: Get Latest Release Tag
-        id: get_latest_release
+        id: release_task
         run: |
           LAST_TAG=$(cat ./last-tag.txt 2>/dev/null || echo "none")
 
@@ -63,7 +63,7 @@ jobs:
             echo "should_build=true" >> $GITHUB_OUTPUT
           fi
 
-          echo "Should build: ${{ steps.release_task.outputs.should_build }}"
+          echo "Should build: $GITHUB_OUTPUT"
 
       # 3. 登录阿里云 ACR（需提前在 GitHub Secrets 中配置 ACR_USERNAME 和 ACR_PASSWORD）
       - name: Login to ACR
