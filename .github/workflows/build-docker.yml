@@ -95,15 +95,19 @@ jobs:
             -f docker/base/Dockerfile \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache \
-            --tag ghcr.io/browserless/base:latest \
+            --tag browserless/base:latest \
             .
+
+          docker tag browserless/base:latest ghcr.io/browserless/base:latest
 
           docker buildx build \
             -f docker/edge/Dockerfile \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache \
-            --tag ghcr.io/browserless/edge:latest \
+            --tag browserless/edge:latest \
             .
+
+          docker tag browserless/edge:latest ghcr.io/browserless/edge:latest
 
           cd ..
           docker buildx build \
