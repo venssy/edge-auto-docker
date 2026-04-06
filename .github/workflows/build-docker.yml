@@ -63,6 +63,8 @@ jobs:
             echo "should_build=true" >> $GITHUB_OUTPUT
           fi
 
+          echo "Should build: ${{ steps.get_latest_release.outputs.should_build }}"
+
       # 3. 登录阿里云 ACR（需提前在 GitHub Secrets 中配置 ACR_USERNAME 和 ACR_PASSWORD）
       - name: Login to ACR
         uses: docker/login-action@v3
@@ -82,8 +84,7 @@ jobs:
 
       # 6. 构建 Docker 镜像（仅在 Push/手动触发 或 基础镜像更新时）
       - name: Build Docker image
-        if: |
-          steps.release_task.outputs.should_build == 'true'
+        if: steps.release_task.outputs.should_build == 'true'
         run: |
           # 1. 拉取目标仓库代码到子目录
           git clone --depth 1 https://github.com/${{ env.TARGET_REPO }} ${{ env.TARGET_DIR }}
@@ -115,7 +116,7 @@ jobs:
           echo "${{ steps.release_task.outputs.TAG }}" > ./last-tag.txt
 
       - name: Save new last tag to cache
-        if: steps.compare-tags.outputs.should_build == 'true'
+        if: steps.release_task.outputs.should_build == 'true'
         uses: actions/cache@v3
         with:
           path: ./last-tag.txt
