@@ -30,9 +30,9 @@ jobs:
       - name: Get Latest Release Tag
         id: get_latest_release
         run: |
-          RELEASE_DATA=$(curl -sSfL \
+          RELEASE_DATA=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ env.TARGET_REPO }}/releases/latest")
+            https://api.github.com/repos/${{ env.TARGET_REPO }}/releases/latest)
 
           RAW_TAG=$(echo "$RELEASE_DATA" | jq -r .tag_name)
           
