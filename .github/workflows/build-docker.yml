@@ -112,7 +112,7 @@ jobs:
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release_task.outputs.TAG }} \
             --push .
 
-          echo "$NEW_TAG" > ./last-tag.txt
+          echo "${{ steps.release_task.outputs.TAG }}" > ./last-tag.txt
 
       - name: Save new last tag to cache
         if: steps.compare-tags.outputs.should_build == 'true'
