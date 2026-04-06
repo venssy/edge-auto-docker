@@ -2,7 +2,7 @@ name: Build and Push Docker to ACR
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # 每天凌晨 0 点触发
+    - cron: "0 18 * * *"  # 每天凌晨 0 点触发
   push:
     branches:
       - main           # 推送 main 分支时触发
@@ -96,8 +96,10 @@ jobs:
             -f docker/base/Dockerfile \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache \
-            --tag ghcr.io/browserless/base:latest \
+            --tag browserless/base:latest \
             --load .
+
+          docker tag browserless/base:latest ghcr.io/browserless/base:latest
 
           echo "[build] edge image: ghcr.io/browserless/edge:latest"
           docker buildx build \
@@ -106,6 +108,8 @@ jobs:
             --cache-to=type=local,dest=/tmp/.buildx-cache \
             --tag ghcr.io/browserless/edge:latest \
             --load .
+
+          docker tag browserless/edge:latest ghcr.io/browserless/edge:latest
 
           cd ..
           echo "[build] end image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
