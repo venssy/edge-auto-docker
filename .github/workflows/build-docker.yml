@@ -32,7 +32,7 @@ jobs:
         run: |
           RELEASE_DATA=$(curl -sSfL \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ env.TARGET_REPO }}/releases/latest"
+            "https://api.github.com/repos/${{ env.TARGET_REPO }}/releases/latest")
 
           RAW_TAG=$(echo "$RELEASE_DATA" | jq -r .tag_name)
           
@@ -59,7 +59,7 @@ jobs:
           NOW_TS=$(date +%s)
           DIFF=$(( (NOW_TS - PUB_TS) / 3600 ))
 
-          if [ "${{ github.event_name }}" == "schedule" ]; then
+          if [ "${{ github.event_name }}" == "schedule" || "${{ github.event_name }}" == "workflow_dispatch" ]; then
             [ "$DIFF" -le 24 ] && echo "should_build=true" >> $GITHUB_OUTPUT || echo "should_build=false" >> $GITHUB_OUTPUT
           else
             echo "should_build=true" >> $GITHUB_OUTPUT
@@ -85,9 +85,7 @@ jobs:
       # 6. 构建 Docker 镜像（仅在 Push/手动触发 或 基础镜像更新时）
       - name: Build Docker image
         if: |
-          steps.release_task.outputs.should_build == 'true' ||
-          github.event_name == 'push' || 
-          github.event_name == 'workflow_dispatch'
+          steps.release_task.outputs.should_build == 'true'
         run: |
           # 1. 拉取目标仓库代码到子目录
           git clone --depth 1 https://github.com/${{ env.TARGET_REPO }} ${{ env.TARGET_DIR }}
@@ -115,8 +113,6 @@ jobs:
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release_task.outputs.TAG }} \
             --push .
-
-           echo "${{ env.LATEST_RELEASE_TIME }}" > ../last_release_time.txt
 
       # 7. 保存 Docker 缓存（供下次构建使用）
       - name: Save Docker cache
