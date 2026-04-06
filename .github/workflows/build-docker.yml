@@ -26,29 +26,29 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Restore cached last tag
+        id: cache-last-tag
+        uses: actions/cache@v3
+        with:
+          path: ./last-tag.txt
+          key: last-build-tag
+
       # 2. 获取目标仓库的最新 Release 名称（如 "v1.2.3"）
       - name: Get Latest Release Tag
         id: get_latest_release
         run: |
-          LATEST_TAG_INFO=$(curl -s \
+          LAST_TAG=$(cat ./last-tag.txt 2>/dev/null || echo "none")
+
+          LATEST_TAG=$(curl -s \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ env.TARGET_REPO }}/tags" | \
-              jq -r 'sort_by(.commit.commit.author.date) | reverse | .[0]')
+              jq -r '.[0].name')
 
-          # 提取 Tag 名称
-          TAG_NAME=$(echo "$LATEST_TAG_INFO" | jq -r '.name')
-          
-          # 检查是否成功获取 Release 名称
-          if [[ -z "$TAG_NAME" ]]; then
-            echo "Error: Failed to get latest release from ${{ env.TARGET_REPO }}"
-            exit 1
-          fi
-          
-          VERSION=$(echo "$TAG_NAME" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//')
+          VERSION=$(echo "$LATEST_TAG" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//')
 
           if [[ -z "$VERSION" ]]; then
-            echo "Error: Failed to extract version from tag '$TAG_NAME'"
+            echo "Error: Failed to extract version from tag '$LATEST_TAG'"
             exit 1
           else
             echo "Latest release version: $VERSION"
@@ -57,15 +57,8 @@ jobs:
           echo "TAG=$VERSION" >> $GITHUB_OUTPUT
 
           # 4. 定时任务增量判断逻辑
-
-          # 提取 Commit 时间（UTC）
-          PUB_DATE=$(echo "$LATEST_TAG_INFO" | jq -r '.commit.commit.author.date')
-          PUB_TS=$(date -d "$PUB_DATE" +%s)
-          NOW_TS=$(date +%s)
-          DIFF=$(( (NOW_TS - PUB_TS) / 3600 ))
-
-          if [ "${{ github.event_name }}" == "schedule" || "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            [ "$DIFF" -le 24 ] && echo "should_build=true" >> $GITHUB_OUTPUT || echo "should_build=false" >> $GITHUB_OUTPUT
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            [ "$LAST_TAG" -eq "$VERSION" ] && echo "should_build=false" >> $GITHUB_OUTPUT || echo "should_build=true" >> $GITHUB_OUTPUT
           else
             echo "should_build=true" >> $GITHUB_OUTPUT
           fi
@@ -118,6 +111,15 @@ jobs:
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
             --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.release_task.outputs.TAG }} \
             --push .
+
+          echo "$NEW_TAG" > ./last-tag.txt
+
+      - name: Save new last tag to cache
+        if: steps.compare-tags.outputs.should_build == 'true'
+        uses: actions/cache@v3
+        with:
+          path: ./last-tag.txt
+          key: last-build-tag
 
       # 7. 保存 Docker 缓存（供下次构建使用）
       - name: Save Docker cache
