@@ -1,10 +1,6 @@
-FROM ghcr.io/browserless/chromium:latest
+FROM ghcr.io/browserless/edge:latest
 
 USER root
-
-RUN ./node_modules/playwright-core/cli.js install --with-deps msedge && \
-    chown -R blessuser:blessuser $APP_DIR && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN apt-get update && apt-get install -y \
     xvfb x11vnc novnc websockify scrot python3-tk python3-dev gnome-screenshot \
