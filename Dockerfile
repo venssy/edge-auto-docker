@@ -1,4 +1,4 @@
-FROM edge
+FROM ghcr.io/browserless/chromium:latest
 
 USER root
 
