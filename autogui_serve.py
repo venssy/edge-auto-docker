@@ -1,10 +1,12 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 import pyautogui
 import uvicorn
 import asyncio
+import subprocess
+import traceback
 import os
 
 app = FastAPI()
@@ -60,13 +62,14 @@ async def locateOnScreen(
   except HTTPException as e:
     raise e
   except Exception as e:
+    traceback.print_exc()
     raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/auto/clickImage")
 async def clickImage(
     image_file: UploadFile = File(...),
-    confidence: float = 0.8,
-    grayscale=False,  # 是否转为灰度图加速匹配
+    confidence: float = Form(0.6),
+    grayscale: bool = Form(True),  # 是否转为灰度图加速匹配
     region=None,  # 搜索区域 (left, top, width, height)
     step=1,  # 搜索步长（跳过像素数，加速但可能漏检）
     minSearchTime=0,  # 最小搜索时间（秒），避免过快返回
@@ -75,6 +78,7 @@ async def clickImage(
   try:
     file_path = "/tmp/locate_image.png"
     await save_upload_file(image_file, file_path)
+    print(f"clickImage: confidence={confidence}, grayscale={grayscale}, region={region}, step={step}, minSearchTime={minSearchTime}, timeout={timeout}")
     location = pyautogui.locateOnScreen(
       file_path,
       confidence=confidence,
@@ -84,14 +88,20 @@ async def clickImage(
       minSearchTime=minSearchTime
     )
     if location:
-      location_center_x, location_center_y = pyautogui.center(location)
-      await control_mouse(MouseCommand(x=location_center_x, y=location_center_y, action="click"))
-      return {"status": "success", "location": {"left": location.left, "top": location.top, "width": location.width, "height": location.height, "center_x": location_center_x, "center_y": location_center_y}}
+      # location_center_x, location_center_y = pyautogui.center(location)
+      location_center_x = int(location.left) + int(location.width / 2)
+      location_center_y = int(location.top) + int(location.height / 2)
+      print("control_mouse: click at", location, location_center_x, location_center_y)
+      pyautogui.click(pyautogui.center(location))
+      print("control_mouse: clicked at", location, location_center_x, location_center_y)
+      # await control_mouse(MouseCommand(x=location_center_x, y=location_center_y, action="click"))
+      return {"status": "success", "location": {"left": int(location.left), "top": int(location.top), "width": int(location.width), "height": int(location.height), "center_x": int(location_center_x), "center_y": int(location_center_y)}}
     else:
       raise HTTPException(status_code=500, detail="Image not found")
   except HTTPException as e:
     raise e
   except Exception as e:
+    traceback.print_exc()
     raise HTTPException(status_code=500, detail=str(e))
 
 class ScreenShotCommand(BaseModel):
