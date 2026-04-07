@@ -3,10 +3,10 @@ FROM ghcr.io/browserless/chromium:latest
 USER root
 
 RUN apt-get update && apt-get install -y \
-    xvfb x11vnc novnc websockify scrot python3-tk python3-dev gnome-screenshot python3-typing-extensions xdotool \
+    xvfb x11vnc novnc websockify scrot python3-tk python3-dev gnome-screenshot python3-typing-extensions xdotool xserver-xephyr \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install fastapi uvicorn pyautogui pydantic python-multipart opencv-python --ignore-installed --break-system-packages -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip install fastapi uvicorn pyautogui pydantic python-multipart opencv-python python3-xlib PyGetWindow MouseInfo --ignore-installed --break-system-packages -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 USER blessuser
 
